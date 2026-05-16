@@ -1,0 +1,77 @@
+# Cybersecurity Dataset Generation System
+# Requirements for autonomous pentesting agent trajectory generation
+
+# Core Framework
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+pydantic==2.5.3
+pydantic-settings==2.1.0
+
+# Async & Networking
+asyncio-redis==0.16.0
+aiohttp==3.9.1
+httpx==0.26.0
+
+# Web Scraping & Crawling
+playwright==1.41.0
+beautifulsoup4==4.12.3
+trafilatura==1.6.4
+newspaper3k==0.2.8
+yt-dlp==2024.1.5
+selenium==4.16.0
+webdriver-manager==4.16.0
+
+# Data Processing
+lxml==5.1.0
+html5lib==1.1
+bleach==6.1.0
+python-magic==0.4.27
+pdfminer.six==20231228
+python-docx==1.1.0
+
+# Database & Queue
+redis==5.0.1
+celery==5.3.6
+sqlalchemy==2.0.25
+asyncpg==0.29.0
+psycopg2-binary==2.9.9
+
+# AI & ML
+transformers==4.36.2
+torch==2.1.2
+sentence-transformers==2.3.1
+accelerate==0.25.1
+vllm==0.2.3
+
+# Dataset & Storage
+huggingface-hub==0.20.1
+datasets==2.16.1
+pandas==2.1.4
+numpy==1.26.3
+pyarrow==14.0.2
+python-rapidjson==1.19
+
+# Utilities
+python-dotenv==1.0.0
+pyyaml==6.0.1
+python-multipart==0.0.6
+tqdm==4.66.1
+colorlog==6.8.0
+structlog==24.1.0
+
+# Text Processing
+nltk==3.8.1
+spacy==3.7.2
+regex==2023.12.25
+
+# Validation & Quality
+scikit-learn==1.4.0
+faiss-cpu==1.7.4
+levenshtein==0.21.1
+rapidfuzz==3.6.1
+
+# Testing
+pytest==7.4.4
+pytest-asyncio==0.23.3
+pytest-cov==4.1.0
+httpx==0.26.0

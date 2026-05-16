@@ -1,0 +1,168 @@
+# Cybersecurity Dataset Generation System Configuration
+
+# Application
+app:
+  name: "CyberAgent Dataset Generator"
+  version: "1.0.0"
+  debug: false
+  log_level: "INFO"
+
+# API
+api:
+  host: "0.0.0.0"
+  port: 8000
+  workers: 4
+  reload: false
+
+# Database
+database:
+  url: "postgresql+asyncpg://cyberagent:cyberagent123@localhost:5432/cybersecurity_data"
+  pool_size: 20
+  max_overflow: 10
+  echo: false
+
+# Redis
+redis:
+  url: "redis://localhost:6379"
+  max_connections: 50
+
+# Celery
+celery:
+  broker_url: "redis://localhost:6379/0"
+  result_backend: "redis://localhost:6379/1"
+  task_serializer: "json"
+  result_serializer: "json"
+  accept_content: ["json"]
+  timezone: "UTC"
+  enable_utc: true
+  task_acks_late: true
+  worker_prefetch_multiplier: 1
+  task_track_started: true
+  task_time_limit: 3600
+  task_soft_time_limit: 3000
+
+# Scraping
+scraping:
+  max_workers: 10
+  request_timeout: 30
+  retry_attempts: 3
+  retry_delay: 5
+  rate_limit: 2  # requests per second
+  user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+  obey_robots_txt: true
+  max_depth: 3
+  download_delay: 1
+
+# Data Collection Sources
+sources:
+  hackthebox:
+    enabled: true
+    base_url: "https://www.hackthebox.com"
+    categories: [" writeups", "labs"]
+    rate_limit: 5
+  
+  vulnhub:
+    enabled: true
+    base_url: "https://www.vulnhub.com"
+    categories: ["entries"]
+    rate_limit: 3
+  
+  portswigger:
+    enabled: true
+    base_url: "https://portswigger.net/web-security"
+    categories: ["academy", "blog"]
+    rate_limit: 5
+  
+  owasp:
+    enabled: true
+    base_url: "https://owasp.org"
+    categories: ["www-project", "guide"]
+    rate_limit: 3
+  
+  github:
+    enabled: true
+    base_url: "https://api.github.com"
+    search_keywords: ["pentest", "exploit", "privesc", "redteam"]
+    rate_limit: 10
+  
+  youtube:
+    enabled: true
+    use_ytdlp: true
+    channels: ["IppSec", "LiveOverflow"]
+    rate_limit: 2
+
+# AI Models
+ai:
+  reasoning_model: "deepseek-ai/deepseek-coder-33b-instruct"
+  embedding_model: "sentence-transformers/all-MiniLM-L6-v2"
+  vllm_server: "http://localhost:8001"
+  max_batch_size: 8
+  temperature: 0.7
+  top_p: 0.9
+  top_k: 50
+  max_tokens: 2048
+
+# Dataset Generation
+dataset:
+  min_steps: 5
+  max_steps: 50
+  min_conversations: 3
+  failure_rate: 0.35  # 35% with injected failures
+  diversity_categories:
+    - web_exploitation
+    - active_directory
+    - linux_privesc
+    - windows_privesc
+    - cloud_exploitation
+    - docker_escape
+    - kubernetes_attack
+    - api_exploitation
+    - lateral_movement
+
+# Validation
+validation:
+  min_quality_score: 0.7
+  max_duplicate_similarity: 0.95
+  require_all_tools: true
+  reject_invalid_commands: true
+  semantic_deduplication: true
+
+# Export
+export:
+  output_dir: "/workspace/project/data/trajectories"
+  formats:
+    - jsonl
+    - huggingface
+    - agent_flan
+    - sharegpt
+    - react
+  compression: true
+  batch_size: 1000
+
+# Tool Output Simulation
+tools:
+  nmap:
+    enabled: true
+    output_templates: "configs/tool_outputs/nmap"
+  gobuster:
+    enabled: true
+  ffuf:
+    enabled: true
+  sqlmap:
+    enabled: true
+  hydra:
+    enabled: true
+  crackmapexec:
+    enabled: true
+  smbclient:
+    enabled: true
+  enum4linux:
+    enabled: true
+  impacket:
+    enabled: true
+  linpeas:
+    enabled: true
+  winpeas:
+    enabled: true
+  bloodhound:
+    enabled: true

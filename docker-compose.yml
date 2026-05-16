@@ -1,0 +1,137 @@
+version: '3.9'
+
+services:
+  # Redis for async queue and caching
+  redis:
+    image: redis:7.2-alpine
+    container_name: cyber-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    networks:
+      - cybernet
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # PostgreSQL for persistent storage
+  postgres:
+    image: postgres:15-alpine
+    container_name: cyber-postgres
+    environment:
+      POSTGRES_USER: cyberagent
+      POSTGRES_PASSWORD: cyberagent123
+      POSTGRES_DB: cybersecurity_data
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - cybernet
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cyberagent"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Celery worker for distributed processing
+  celery-worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: cyber-celery-worker
+    command: celery -A src.utils.celery_app worker --loglevel=info --concurrency=4
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=postgresql+asyncpg://cyberagent:cyberagent123@postgres:5432/cybersecurity_data
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+    volumes:
+      - ./data:/workspace/project/data
+      - ./models:/workspace/project/models
+    networks:
+      - cybernet
+
+  # FastAPI server
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: cyber-api
+    ports:
+      - "8000:8000"
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=postgresql+asyncpg://cyberagent:cyberagent123@postgres:5432/cybersecurity_data
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+    volumes:
+      - ./data:/workspace/project/data
+      - ./models:/workspace/project/models
+    networks:
+      - cybernet
+
+  # vLLM for GPU inference
+  vllm:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.vllm
+    container_name: cyber-vllm
+    ports:
+      - "8001:8001"
+    environment:
+      - GPU_MEMORY_FRACTION=0.9
+      - MODEL=/models
+      - TPS=256
+      - MAX_MODEL_LEN=4096
+    volumes:
+      - ./models:/models
+    networks:
+      - cybernet
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  # Monitoring (Flower for Celery)
+  flower:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: cyber-flower
+    ports:
+      - "5555:5555"
+    depends_on:
+      redis:
+        condition: service_healthy
+    command: celery -A src.utils.celery_app flower --port=5555
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+    networks:
+      - cybernet
+
+volumes:
+  redis_data:
+  postgres_data:
+
+networks:
+  cybernet:
+    driver: bridge
